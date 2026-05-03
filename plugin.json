@@ -1,0 +1,26 @@
+{
+  "id": "file-viewer",
+  "name": "文件预览器",
+  "version": "1.0.0",
+  "description": "在聊天中点击 AI 输出的文件，右侧弹出面板预览内容。支持 Markdown/JSON/CSV/代码/HTML/PDF/Excel/PPTX 等格式。",
+  "author": "longgb246",
+  "license": "MIT",
+  "repository": "https://github.com/longgb246/qwenpaw-file-viewer",
+  "homepage": "https://github.com/longgb246/qwenpaw-file-viewer",
+  "entry": {
+    "backend": "src/plugin.py",
+    "frontend": "src/frontend.js"
+  },
+  "sidebar": false,
+  "permissions": ["filesystem:read"],
+  "dependencies": [],
+  "min_version": "1.1.0",
+  "min_qwenpaw_version": "1.1.0",
+  "meta": {
+    "port": 39150,
+    "supported_formats": [
+      "md", "json", "txt", "csv", "py", "js", "ts", "html",
+      "pdf", "xlsx", "xls", "pptx", "ppt", "png", "jpg", "gif"
+    ]
+  }
+}

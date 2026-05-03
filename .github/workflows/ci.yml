@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ['3.10', '3.11', '3.12']
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Validate plugin.json
+        run: |
+          python3 -c "
+          import json
+          d = json.load(open('plugin.json'))
+          assert d.get('id'), 'missing id'
+          assert d.get('name'), 'missing name'
+          assert d.get('version'), 'missing version'
+          assert d.get('entry', {}).get('backend'), 'missing entry.backend'
+          print('plugin.json OK')
+          "
+
+      - name: Validate plugin.py syntax
+        run: python3 -c "import py_compile; py_compile.compile('src/plugin.py', doraise=True); print('src/plugin.py OK')"
+
+      - name: Validate install.sh syntax
+        run: bash -n install.sh && echo "install.sh OK"
+
+      - name: Validate uninstall.sh syntax
+        run: bash -n uninstall.sh && echo "uninstall.sh OK"
+
+      - name: Check frontend.js exists
+        run: test -f src/frontend.js && echo "src/frontend.js OK"
+
+      - name: Check static directory exists
+        run: test -d src/static && echo "src/static/ OK"
