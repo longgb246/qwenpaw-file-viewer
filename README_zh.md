@@ -27,11 +27,11 @@
 
 ## 截图
 
-![文件预览器界面](docs/file-viewer-01.jpg)
+<img src="docs/file-viewer-01.jpg" alt="文件预览器界面" width="100%" />
 
 ## 演示
 
-![文件预览器演示](docs/file-viewer-02.gif)
+<img src="docs/file-viewer-02.gif" alt="文件预览器演示" width="100%" />
 
 ## 支持的格式
 
