@@ -29,6 +29,10 @@
 
 ![文件预览器界面](docs/file-viewer-01.jpg)
 
+## 演示
+
+![文件预览器演示](docs/file-viewer-02.gif)
+
 ## 支持的格式
 
 | 分类 | 扩展名 |

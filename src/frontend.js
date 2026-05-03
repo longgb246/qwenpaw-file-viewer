@@ -297,9 +297,16 @@
     }, styleTag, tableArea, tabs);
   };
 
-  // ── Excel 渲染器（Luckysheet 方案 - 已停用）────────────────
+  // ── Excel 渲染器（Luckysheet 方案 - 已停用，依赖文件已删除）────
   // 完整电子表格编辑器，运行时 ~4MB JS（luckysheet + jquery + xlsx）
-  // 如需启用，将 renderContent 中 XlsxLiteRenderer 改为 XlsxLuckysheetRenderer
+  //
+  // ⚠️ 当前所需的静态资源文件已从 src/static/ 中移除（节省 ~24.8MB），如需恢复使用：
+  //   1. 重新下载以下文件到 src/static/ 目录：
+  //      - luckysheet.umd.js          (3MB,   https://cdn.jsdelivr.net/npm/luckysheet/dist/luckysheet.umd.js)
+  //      - jquery.min.js              (86KB,  https://code.jquery.com/jquery-3.7.1.min.js)
+  //      - jquery.mousewheel.min.js   (3KB,   https://cdn.jsdelivr.net/npm/jquery-mousewheel@3.1.13/jquery.mousewheel.min.js)
+  //      - css/luckysheet.css         (141KB, https://cdn.jsdelivr.net/npm/luckysheet/dist/plugins/css/pluginsCss.css)
+  //   2. 将 renderContent 中 XlsxLiteRenderer 改为 XlsxLuckysheetRenderer
   var XlsxLuckysheetRenderer = function (props) {
     var content = props.content; // base64
     var containerRef = useRef(null);

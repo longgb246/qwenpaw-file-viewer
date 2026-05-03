@@ -29,6 +29,10 @@ Click on AI-generated files in the chat to preview them in a slide-out panel —
 
 ![File Viewer UI](docs/file-viewer-01.jpg)
 
+## Demo
+
+![File Viewer Demo](docs/file-viewer-02.gif)
+
 ## Supported Formats
 
 | Category | Extensions |
