@@ -209,7 +209,8 @@
         // content 是 base64，转为 data URL iframe（避开 content-disposition: attachment）
         return createElement('iframe', { src: 'data:application/pdf;base64,' + content, style: { width: '100%', height: '100%', border: 'none', minHeight: 600 } });
       case 'xlsx': case 'xls':
-        return createElement(XlsxRenderer, { content: content });
+        // 当前使用轻量方案（XlsxLiteRenderer），如需切换回 Luckysheet 方案，改为 XlsxLuckysheetRenderer
+        return createElement(XlsxLiteRenderer, { content: content });
       case 'pptx': case 'ppt':
         return createElement(PptxRenderer, { content: content });
       default:
@@ -217,8 +218,89 @@
     }
   }
 
-  // ── Excel 渲染器 ──────────────────────────────────────────
-  var XlsxRenderer = function (props) {
+  // ── Excel 渲染器（轻量方案）── SheetJS sheet_to_html ─────
+  // 仅依赖 xlsx.full.min.js（~862KB），无需 jQuery/Luckysheet（~4MB）
+  // 如需切换回 Luckysheet 方案，将 renderContent 中 XlsxLiteRenderer 改为 XlsxLuckysheetRenderer
+  var XlsxLiteRenderer = function (props) {
+    var content = props.content; // base64
+    var containerRef = useRef(null);
+    var errSt = useState(''); var errMsg = errSt[0]; var setError = errSt[1];
+    var ldSt = useState(true); var loading = ldSt[0]; var setLd = ldSt[1];
+    var sheetSt = useState(0); var activeSheet = sheetSt[0]; var setActiveSheet = sheetSt[1];
+    var dataSt = useState(null); var sheetData = dataSt[0]; var setSheetData = dataSt[1];
+
+    // 加载 SheetJS
+    useEffect(function () {
+      if (!content) return;
+      loadScriptOnce(STATIC_BASE + '/xlsx.full.min.js', function () { return typeof XLSX !== 'undefined'; })
+        .then(function () {
+          try {
+            var bytes = base64ToBytes(content);
+            var wb = XLSX.read(bytes, { type: 'array' });
+            var sheets = wb.SheetNames.map(function (name) {
+              var ws = wb.Sheets[name];
+              var html = XLSX.utils.sheet_to_html(ws, { id: 'xlsx-table-' + name.replace(/\s/g, '_') });
+              return { name: name, html: html };
+            });
+            setSheetData(sheets);
+            setLd(false);
+          } catch (e) { setError('解析 Excel 失败: ' + e.message); setLd(false); }
+        })
+        .catch(function (e) { setError('加载失败: ' + e.message); setLd(false); });
+    }, [content]);
+
+    if (errMsg) return createElement('div', { style: { color: '#ff4d4f', padding: 20 } }, errMsg);
+    if (loading) return createElement('div', { style: { textAlign: 'center', padding: 40, color: '#999' } }, '正在加载 Excel...');
+    if (!sheetData || sheetData.length === 0) return createElement('div', { style: { padding: 20, color: '#999' } }, '无数据');
+
+    // Sheet 标签栏
+    var tabs = createElement('div', { style: {
+      display: 'flex', borderTop: '1px solid #d9d9d9', background: '#f0f0f0',
+      overflowX: 'auto', flexShrink: 0
+    } },
+      sheetData.map(function (s, idx) {
+        var isActive = idx === activeSheet;
+        return createElement('div', {
+          key: idx,
+          onClick: function () { setActiveSheet(idx); },
+          style: {
+            padding: '6px 16px', cursor: 'pointer', fontSize: 13, whiteSpace: 'nowrap',
+            borderRight: '1px solid #d9d9d9',
+            background: isActive ? '#fff' : '#f0f0f0',
+            color: isActive ? '#1890ff' : '#333',
+            fontWeight: isActive ? '600' : '400',
+            borderBottom: isActive ? '2px solid #1890ff' : '2px solid transparent'
+          }
+        }, s.name);
+      })
+    );
+
+    // 表格内容区域
+    var tableArea = createElement('div', {
+      ref: containerRef,
+      style: { flex: 1, overflow: 'auto', background: '#fff' },
+      dangerouslySetInnerHTML: { __html: sheetData[activeSheet].html }
+    });
+
+    // 内联样式注入
+    var styleTag = createElement('style', null, [
+      '.xlsx-lite-wrap table { border-collapse: collapse; width: 100%; font-size: 13px; font-family: -apple-system, "Segoe UI", Roboto, sans-serif; }',
+      '.xlsx-lite-wrap th, .xlsx-lite-wrap td { border: 1px solid #e8e8e8; padding: 6px 10px; text-align: left; white-space: nowrap; }',
+      '.xlsx-lite-wrap thead tr:first-child th, .xlsx-lite-wrap tr:first-child td { background: #fafafa; font-weight: 600; position: sticky; top: 0; z-index: 1; }',
+      '.xlsx-lite-wrap tbody tr:nth-child(even) { background: #fafbfc; }',
+      '.xlsx-lite-wrap tbody tr:hover { background: #e6f7ff; }'
+    ].join('\n'));
+
+    return createElement('div', {
+      className: 'xlsx-lite-wrap',
+      style: { display: 'flex', flexDirection: 'column', height: 'calc(100vh - 120px)', background: '#fff', border: '1px solid #d9d9d9', borderRadius: 4 }
+    }, styleTag, tableArea, tabs);
+  };
+
+  // ── Excel 渲染器（Luckysheet 方案 - 已停用）────────────────
+  // 完整电子表格编辑器，运行时 ~4MB JS（luckysheet + jquery + xlsx）
+  // 如需启用，将 renderContent 中 XlsxLiteRenderer 改为 XlsxLuckysheetRenderer
+  var XlsxLuckysheetRenderer = function (props) {
     var content = props.content; // base64
     var containerRef = useRef(null);
     var errSt = useState(''); var errMsg = errSt[0]; var setError = errSt[1];
