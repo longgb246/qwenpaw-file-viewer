@@ -306,7 +306,9 @@
     var args = fd.arguments || fd.input || fd.args || {};
     var outputStr = sd && sd.output ? sd.output : '';
 
-    var filePath = args.file_path || args.path || args.filepath || null;
+    // 兼容 write_file (file_path) 和 read_file (relative_workspace_path) 的参数名
+    var filePath = args.file_path || args.path || args.filepath
+                || args.relative_workspace_path || null;
     if (!filePath && fd.source && fd.source.url) {
       var url = fd.source.url;
       if (url.startsWith('file://')) url = url.slice(7);
@@ -422,10 +424,10 @@
   waitForHost(function () {
     injectCSS();
     injectPanel();
-    window.QwenPaw.registerToolRender(PLUGIN_ID, { 'write_file': FileCard, 'send_file_to_user': FileCard });
+    window.QwenPaw.registerToolRender(PLUGIN_ID, { 'write_file': FileCard, 'send_file_to_user': FileCard, 'read_file': FileCard });
     bus.push(function () { renderPanel(); });
     renderPanel();
     document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && state.open) emit({ open: false }); });
-    console.log('[FileViewer] ✅ v4.0 已就绪（走 QwenPaw 同源路由）');
+    console.log('[FileViewer] ✅ v5.0 已就绪（支持 read_file 预览）');
   });
 })();

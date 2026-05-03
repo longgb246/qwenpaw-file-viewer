@@ -86,6 +86,21 @@ cp "$SCRIPT_DIR/src/frontend.js" "$PLUGIN_DIR/"
 cp "$SCRIPT_DIR/src/__init__.py" "$PLUGIN_DIR/"
 cp "$SCRIPT_DIR/src/start.py" "$PLUGIN_DIR/"
 
+# 安装后 entry 路径需要去掉 src/ 前缀（文件被展平到插件根目录）
+python3 - "$PLUGIN_DIR/plugin.json" << 'PYEOF'
+import json, sys
+pj = sys.argv[1]
+with open(pj, "r", encoding="utf-8") as f:
+    d = json.load(f)
+entry = d.get("entry", {})
+for k in list(entry.keys()):
+    if entry[k].startswith("src/"):
+        entry[k] = entry[k][4:]
+with open(pj, "w", encoding="utf-8") as f:
+    json.dump(d, f, indent=2, ensure_ascii=False)
+print("  ✓ 已修正 plugin.json entry 路径")
+PYEOF
+
 echo "📁 复制静态资源（Luckysheet 等）..."
 cp -r "$SCRIPT_DIR/src/static" "$PLUGIN_DIR/static"
 

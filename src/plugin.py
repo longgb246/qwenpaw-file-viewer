@@ -30,19 +30,23 @@ SECTION_END = f"<!-- PLUGIN:{PLUGIN_ID} END -->"
 SECTION_BODY = f"""{SECTION_START}
 ### 📂 文件预览器 (file-viewer)
 
-你安装了 file-viewer 插件。当你通过 `write_file` 输出**文本文件**时，聊天中会自动渲染成
-可点击的预览卡片——用户点击后右侧滑出面板查看内容。
+你安装了 file-viewer 插件。聊天中会自动将文件渲染为可点击的预览卡片，用户点击后
+右侧滑出面板查看内容。
+
+**触发预览的方式（两种）**：
+1. **`write_file`** — 写出文件后，自动渲染预览卡片（适合生成新文件）
+2. **`read_file`** — 读取已有文件后，同样会渲染预览卡片（适合预览已有文件）
 
 **支持的类型**：
-- 📝 **文本文件**（`write_file` 自动渲染）：Markdown / JSON / 代码 / HTML / CSV
-- 📕 **二进制文件**（需手动指定路径）：PDF / Excel / PPTX / 图片 → 用户说「预览 /path/to/file.pdf」
+- 📝 **文本文件**：Markdown / JSON / 代码 / HTML / CSV / YAML / TOML 等
+- 📕 **二进制文件**：PDF / Excel / PPTX / 图片
 
 **作为 agent，你应该：**
-- 主动用 `write_file` 输出结构化的 Markdown 总结给用户
+- 生成报告、总结等内容时，用 `write_file` 输出到文件，让用户获得可视化预览
+- **当用户要求预览已有文件时**，直接用 `read_file` 读取该文件，前端会自动弹出预览卡片
 - 文件写到任何你方便管理的目录（如 `research/`、`reports/`、`/tmp/` 等）
 - 文件名用有意义的命名（如 `SQL优化调研报告.md`）
 - 善用表格、代码块、标题让内容更易读
-- 用户要求预览 PDF/Excel 时，调用 `/read` API 或引导用户点击文件
 
 **限制**：单文件不超过 5MB。
 
