@@ -50,5 +50,8 @@ htmlcov/
 git-push.sh
 git-ssh-wrapper.py
 
+# Local development workflow (contains personal paths)
+DEV_WORKFLOW.md
+
 # Core dumps
 core.*
