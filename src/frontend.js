@@ -279,8 +279,9 @@
       if (loading || !containerRef.current || !content) return;
       try {
         var bytes = base64ToBytes(content);
-        // 使用 PPTXViewer 类（完整 UI，含导航控件和全屏）
-        var viewer = new window.PPTXViewer(containerRef.current, {
+        // PPTXViewer 是 UMD 命名空间，真正的构造函数在 PPTXViewer.PPTXViewer
+        var ViewerClass = window.PPTXViewer.PPTXViewer || window.PPTXViewer;
+        var viewer = new ViewerClass(containerRef.current, {
           showControls: true,
           keyboardNavigation: true,
           onLoad: function () { console.log('[FileViewer] PPTX loaded'); },
