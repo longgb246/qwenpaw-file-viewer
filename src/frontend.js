@@ -421,17 +421,30 @@
   function fileIcon(ext) { return {md:'📝',markdown:'📝',json:'📋',csv:'📊',py:'🐍',js:'📜',ts:'📜',sh:'💻',html:'🌐',htm:'🌐',pdf:'📕',xlsx:'📗',xls:'📗',pptx:'📽️',ppt:'📽️'}[ext] || '📄'; }
 
   // ── FileCard 组件 ────────────────────────────────────────
+  // 同时展示预览卡片 + 可折叠的原始工具调用详情
   function FileCard(props) {
     var data = props.data;
+    var expandSt = useState(false); var expanded = expandSt[0]; var setExpanded = expandSt[1];
+
+    // 提取工具调用信息
+    var content = data.content || [];
+    var first = content[0]; var second = content[1];
+    var toolName = first && first.data ? first.data.name || '' : '';
+    var toolArgs = first && first.data ? (first.data.arguments || first.data.input || first.data.args || {}) : {};
+    var toolOutput = second && second.data ? (second.data.output || '') : '';
+
     var info = extractFileInfo(data);
     if (!info || !info.path) {
-      var c = data.content || [];
-      var out = (c[1] && c[1].data && c[1].data.output) || '';
-      return createElement('div', { style: { fontSize: 12, color: '#666', fontFamily: 'monospace' } }, out);
+      // 无法提取文件路径时，回退显示工具调用原始信息
+      return createElement('div', { style: { fontSize: 12, color: '#666', fontFamily: 'monospace' } },
+        toolOutput || JSON.stringify(toolArgs, null, 2));
     }
+
     var previewable = canPreview('.' + info.ext);
     var icon = fileIcon(info.ext);
-    return createElement('div', {
+
+    // 预览卡片
+    var card = createElement('div', {
       className: 'fv-card',
       onClick: previewable ? function () { apiRead(info.path); } : undefined,
       style: { display: 'inline-flex', alignItems: 'center', gap: 8, padding: '6px 12px', borderRadius: 6,
@@ -443,6 +456,54 @@
       previewable ? createElement('span', { style: { color: '#1677ff', fontSize: 11 } }, '点击预览 →')
                   : createElement('span', { style: { color: '#bbb', fontSize: 11 } }, '不可预览')
     );
+
+    // 格式化工具调用参数（简洁显示，过滤掉 file_content 等大字段）
+    var displayArgs = {};
+    Object.keys(toolArgs).forEach(function (k) {
+      var v = toolArgs[k];
+      if (k === 'file_content' || k === 'content') {
+        displayArgs[k] = typeof v === 'string' ? (v.length > 200 ? v.substring(0, 200) + '...[' + v.length + ' chars]' : v) : v;
+      } else {
+        displayArgs[k] = v;
+      }
+    });
+
+    // 格式化输出（截断过长内容）
+    var displayOutput = toolOutput;
+    if (typeof displayOutput === 'string' && displayOutput.length > 500) {
+      displayOutput = displayOutput.substring(0, 500) + '...[' + toolOutput.length + ' chars]';
+    } else if (typeof displayOutput === 'object') {
+      displayOutput = JSON.stringify(displayOutput, null, 2);
+    }
+
+    // 可折叠的工具调用详情
+    var detailToggle = createElement('div', {
+      onClick: function (e) { e.stopPropagation(); setExpanded(!expanded); },
+      style: { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', fontSize: 11,
+        color: '#999', cursor: 'pointer', userSelect: 'none', marginTop: 4 }
+    },
+      createElement('span', { style: { transform: expanded ? 'rotate(90deg)' : 'rotate(0deg)', transition: 'transform 0.2s', display: 'inline-block' } }, '▶'),
+      createElement('span', null, toolName || 'tool_call')
+    );
+
+    var detailContent = expanded ? createElement('div', {
+      style: { marginTop: 4, padding: '8px 12px', background: '#f6f8fa', border: '1px solid #e8e8e8',
+        borderRadius: 4, fontSize: 12, fontFamily: 'Menlo,Consolas,monospace', lineHeight: 1.5, overflowX: 'auto' }
+    },
+      createElement('div', { style: { marginBottom: 6 } },
+        createElement('span', { style: { color: '#8250df', fontWeight: 600 } }, 'Input'),
+        createElement('pre', { style: { margin: '4px 0 0', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#333' } },
+          JSON.stringify(displayArgs, null, 2))
+      ),
+      toolOutput ? createElement('div', null,
+        createElement('span', { style: { color: '#1a7f37', fontWeight: 600 } }, 'Output'),
+        createElement('pre', { style: { margin: '4px 0 0', whiteSpace: 'pre-wrap', wordBreak: 'break-all', color: '#333' } },
+          typeof displayOutput === 'string' ? displayOutput : JSON.stringify(displayOutput, null, 2))
+      ) : null
+    ) : null;
+
+    return createElement('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-start' } },
+      card, detailToggle, detailContent);
   }
 
   // ── 下载 ────────────────────────────────────────────────
