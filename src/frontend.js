@@ -430,7 +430,13 @@
     var content = data.content || [];
     var first = content[0]; var second = content[1];
     var toolName = first && first.data ? first.data.name || '' : '';
-    var toolArgs = first && first.data ? (first.data.arguments || first.data.input || first.data.args || {}) : {};
+    var rawArgs = first && first.data ? (first.data.arguments || first.data.input || first.data.args || {}) : {};
+    // arguments 可能是 JSON 字符串，需要先解析；解析失败则保留原值
+    var toolArgs = rawArgs;
+    if (typeof rawArgs === 'string') {
+      try { toolArgs = JSON.parse(rawArgs); } catch (e) { toolArgs = { _raw: rawArgs }; }
+    }
+    if (!toolArgs || typeof toolArgs !== 'object') toolArgs = {};
     var toolOutput = second && second.data ? (second.data.output || '') : '';
 
     var info = extractFileInfo(data);
